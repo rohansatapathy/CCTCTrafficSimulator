@@ -1,41 +1,63 @@
-public class Point {
-  private int x;
-  private int y;
-  private PApplet canvas;
+public class Point extends SimulationEntity {
+  //private float x;
+  //private float y;
+  
+  private PVector coord;
   
   // constructor
-  Point(int x, int y, PApplet canvas) {
-    this.x = x;
-    this.y = y;
-    this.canvas = canvas;
+  Point(float x, float y) {
+    super("Unnamed", color(0, 0, 0));
+    this.coord = new PVector(x, y);
+    //this.x = x;
+    //this.y = y;
   }
   
-  // default draw function with color BLACK
-  void draw() {
-    this.draw(color(0, 0, 0));
+  Point(float x, float y, String name, color c) {
+    super(name, c);
+    this.coord = new PVector(x, y);
+    //this.x = x;
+    //this.y = y;
   }
   
-  // draw function with parameter options for color
-  void draw(color c) {
+  
+  // draw function w defined color
+  void draw(PApplet canvas) {
+    this.draw(canvas, this.c);
+  }
+  
+  // overridden draw function w new color
+  void draw(PApplet canvas, color newColor) {
     // replace original stroke color and fill color --> currently NOT working when original fill color is noFill() (noFill() value and WHITE value are the same)
     color strokeColorOriginal = g.strokeColor;
     color fillColorOriginal = g.fillColor;
     
-    canvas.stroke(c);
-    canvas.fill(c);
-    canvas.circle(this.x, this.y, 10);
+    canvas.stroke(newColor);
+    canvas.fill(newColor);
+    canvas.circle(this.getX(), this.getY(), 10);
     
     canvas.stroke(strokeColorOriginal);
     canvas.fill(fillColorOriginal);
   }
   
+  boolean onPoint(float xPos, float yPos, float threshold) {
+    assert(threshold >= 0);
+    return PVector.sub(new PVector(xPos, yPos), this.coord).mag() <= threshold;
+    //return sqrt(pow(xPos - this.x, 2) + pow(yPos - this.y, 2)) <= threshold;
+  }
+  
+  boolean clicked(int mouseXPos, int mouseYPos) {
+    return onPoint(mouseXPos, mouseYPos, 10);
+  }
   
   // setter and getters for private member variables
-  void setX(int newX) { this.x = newX; }
+  void setX(float newX) { coord.set(newX, this.getY()); }
   
-  void setY(int newY) { this.y = newY; }
+  void setY(float newY) { coord.set(this.getX(), newY); }
   
-  int getX() { return this.x; }
+  float getX() { return coord.x; }
   
-  int getY() { return this.y; }
+  float getY() { return coord.y; }
+  
+  String toString() { return "Point " + this.name + ": " + this.getX() + ", " + this.getY(); }
+  
 }
