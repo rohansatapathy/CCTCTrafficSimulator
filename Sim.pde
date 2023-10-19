@@ -90,7 +90,6 @@ public class Sim {
   }
   
   Optional<SimulationEntity> getClick(int mouseXPos, int mouseYPos) {
-    System.out.println("in Sim get click");
     for (int i = 0; i < points.size(); i++) {
       if (points.get(i).clicked(mouseXPos, mouseYPos)) {
         return Optional.of(points.get(i));
@@ -110,7 +109,6 @@ public class Sim {
     
     Set<Path> paths = pathCommuterMap.keySet();
     Iterator<Path> pathIterator = paths.iterator();
-    System.out.println("Path size: " + paths.size());
     while (pathIterator.hasNext()) {
       Path path = pathIterator.next();
       if (path.clicked(mouseXPos, mouseYPos)) {

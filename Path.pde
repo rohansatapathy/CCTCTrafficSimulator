@@ -66,51 +66,20 @@ public class Path extends SimulationEntity {
   
   boolean clicked(int xPos, int yPos) {
     for (int i = 0; i < nodes.size() - 3; i++) {
-      float xDistance, yDistance;
-      float xComponent = -1, yComponent = -1;
-      boolean xPosInRange = false, yPosInRange = false;
-      
-      if (nodes.get(i + 2).getX() < nodes.get(i + 1).getX()) {
-        xDistance = ((nodes.get(i + 1).getX() + 10) - (nodes.get(i + 2).getX() - 10));
-        if (xPos >= nodes.get(i + 2).getX() - 10 && xPos <= nodes.get(i + 1).getX() + 10) {
-          xComponent = xPos - (nodes.get(i + 1).getX() + 10);
-          xPosInRange = true;
-        }
-      }
-      else {
-        xDistance = ((nodes.get(i + 2).getX() + 10) - (nodes.get(i + 1).getX() - 10));
-        if (xPos <= nodes.get(i + 2).getX() + 10 && xPos >= nodes.get(i + 1).getX() - 10) {
-          xComponent = xPos - (nodes.get(i + 1).getX() - 10);
-          xPosInRange = true;
-        }
-      }
-      
-      if (nodes.get(i + 2).getY() < nodes.get(i + 1).getY()) {
-        yDistance = ((nodes.get(i + 1).getY() + 10) - (nodes.get(i + 2).getY() - 10));
-        if (yPos >= nodes.get(i + 2).getY() - 10 && yPos <= nodes.get(i + 1).getY() + 10) {
-          yComponent = yPos - (nodes.get(i + 1).getY() + 10);
-          yPosInRange = true;
-        }
-      }
-      else {
-        yDistance = ((nodes.get(i + 2).getY() + 10) - (nodes.get(i + 1).getY() - 10));
-        if (yPos <= nodes.get(i + 2).getY() + 10 && yPos >= nodes.get(i + 1).getY() - 10) {
-          yComponent = yPos - (nodes.get(i + 1).getY() - 10);
-          yPosInRange = true;
-        }
-      }
+      float xDistance = nodes.get(i + 2).getX() - nodes.get(i + 1).getX();
+      float yDistance = nodes.get(i + 2).getY() - nodes.get(i + 1).getY();
       
       // assuming relative linearity, we can approximate the corresponding point of comparison on the curve as
       // the point D units along the curve, where the ratio of D to the length of the curve equals the ratio
-      // of the mouseClick point to the distance between the 2 effective nodes
+      // of the distance of the mouseClick point to the first effective node to the distance between the 2 effective nodes
       
-      if (xPosInRange && yPosInRange) {
-        float tFactor = (new PVector(xComponent, yComponent).mag()) / (new PVector(xDistance, yDistance).mag());
-        System.out.println("TFactor: " + tFactor);
-        System.out.println(getCurvePoint(i, tFactor));
-        if (getCurvePoint(i, tFactor).onPoint(xPos, yPos, 15)) {
-          return true;
-        }
+      float tFactor = (new PVector(xPos - nodes.get(i + 1).getX(), yPos - nodes.get(i + 1).getY()).mag()) / (new PVector(xDistance, yDistance).mag());
+      if (tFactor > 1) {
+        tFactor = 1;
+      }
+ 
+      if (getCurvePoint(i, tFactor).onPoint(xPos, yPos, 15)) {
+        return true;
       }
     }
     return false;
