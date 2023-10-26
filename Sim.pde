@@ -3,13 +3,18 @@ import java.util.*;
 
 public class Sim {
   private PApplet canvas;
-  private Map<Path, ArrayList<Commuter>> pathCommuterMap;
+  private ArrayList<Path> paths;
   private ArrayList<Point> points;
+  private final float PIXELS_PER_FEET = (70 / 50);
+  
+  // for data!
+  private int totalCollisions;
   
   Sim(PApplet canvas) {
     this.canvas = canvas;
-    this.pathCommuterMap = new HashMap<Path, ArrayList<Commuter>>();
+    this.paths = new ArrayList<Path>();
     this.points = new ArrayList<Point>();
+    totalCollisions = 0;
   }
   
   void addPoint(int xCoord, int yCoord) {
@@ -30,96 +35,119 @@ public class Sim {
   }
   
   void addPath(Point[] nodes, color c, String name) {
-    System.out.println("Num: " + pathCommuterMap.size());
-    Path path = new Path(nodes, c, name);
-    pathCommuterMap.put(path, new ArrayList<Commuter>());
-    //paths.add(path);
+    System.out.println("Num: " + paths.size());
+    paths.add(new Path(nodes, c, name));
   }
   
   void addPath(Path path) {
-    pathCommuterMap.putIfAbsent(path, new ArrayList<Commuter>());
-    //paths.add(path);
+    paths.add(path);
   }
   
   void removePath(Path target) {
-    pathCommuterMap.remove(target);
-    //paths.remove(target);
+    paths.remove(target);
   }
   
-  void addCommuter(Commuter commuter) {
-    assert(pathCommuterMap.get(commuter.getPathOfTravel()) != null);
-    pathCommuterMap.get(commuter.getPathOfTravel()).add(commuter);
+  
+  void addCommuter(Commuter commuter, Path path) {
+    for (int i = 0; i < paths.size(); i++) {
+      if (paths.get(i) == path) {
+        paths.get(i).addCommuter(commuter);
+      }
+    }
   }
   
   void removeCommuter(Commuter commuter) {
-    ArrayList<Commuter> commutersOnPath = pathCommuterMap.get(commuter.getPathOfTravel());
-    commutersOnPath.remove(commuter);
-  }
-  
-  void update() {
-    Collection<ArrayList<Commuter>> commuters = pathCommuterMap.values();
-    Iterator<ArrayList<Commuter>> iterator = commuters.iterator();
-    
-    while (iterator.hasNext()) {
-      ArrayList<Commuter> elem = iterator.next();
-      for (int i = 0; i < elem.size(); i++) {
-        elem.get(i).update();
+    for (int i = 0; i < paths.size(); i++) {
+      if (paths.get(i).removeCommuter(commuter)) {
+        return;
       }
     }
+  }
+  
+  void updateCollisions() {
+    ArrayList<Commuter> allCommuters = new ArrayList<Commuter>();
+    for (int i = 0; i < paths.size(); i++) {
+      allCommuters.addAll(paths.get(i).getCommuters());
+    }
+    
+    for (int i = 0; i < allCommuters.size(); i++) {
+      int k = i + 1;
+      boolean neverCollided = true;
+      while (neverCollided && k < allCommuters.size()) {
+        // non-pedestrian collision detected  
+        if (!(allCommuters.get(i) instanceof Pedestrian && allCommuters.get(k) instanceof Pedestrian) && 
+              allCommuters.get(i).detectCollision(allCommuters.get(k))) {
+          neverCollided = false;
+          if (!allCommuters.get(i).isCollided()) {
+            this.totalCollisions++;
+          }
+        }
+        k++;
+      }
+      
+      if (neverCollided) {
+        allCommuters.get(i).setCollided(false);
+      }
+      else {
+        allCommuters.get(i).setCollided(true);
+      }
+    }
+  }
+  
+  void obstacleAvoidance() {} // TODO: implement this
+  
+  void update() {
+    for (int i = 0; i < paths.size(); i++) {
+      paths.get(i).updateCommuters();
+    }
+    updateCollisions();
+  }
+  
+  int getCollisionCount() { // TODO: consider an overall get data function ????
+    return this.totalCollisions;
   }
   
   void draw() {
-    Set<Path> paths = pathCommuterMap.keySet();
-    Iterator<Path> pathIterator = paths.iterator();
-    
-    while (pathIterator.hasNext()) {
-      Path path = pathIterator.next();
-      path.draw(this.canvas);
-      ArrayList<Commuter> commuters = pathCommuterMap.get(path);
-      if (commuters != null) {
-        for (int i = 0; i < commuters.size(); i++) {
-          commuters.get(i).draw(this.canvas);
-        }
-      }
+    for (int i = 0; i < paths.size(); i++) { // draw paths
+      paths.get(i).draw(this.canvas);
     }
     
-    for (int i = 0; i < points.size(); i++) {
+    for (int i = 0; i < points.size(); i++) { // draw points
       points.get(i).draw(this.canvas);
+    }
+    
+    for (int i = 0; i < paths.size(); i++) { // draw commuters
+      ArrayList<Commuter> commuters = paths.get(i).getCommuters();
+      for (int k = 0; k < commuters.size(); k++) {
+        commuters.get(k).draw(this.canvas);
+      }
     }
     
   }
   
-  Optional<SimulationEntity> getClick(int mouseXPos, int mouseYPos) {
+  Optional<SimEntity> getClick(int mouseXPos, int mouseYPos) {
     for (int i = 0; i < points.size(); i++) {
       if (points.get(i).clicked(mouseXPos, mouseYPos)) {
         return Optional.of(points.get(i));
       }
     }
     
-    Collection<ArrayList<Commuter>> commuters = pathCommuterMap.values();
-    Iterator<ArrayList<Commuter>> commuterIterator = commuters.iterator();
-    while (commuterIterator.hasNext()) {
-      ArrayList<Commuter> elem = commuterIterator.next();
-      for (int i = 0; i < elem.size(); i++) {
-        if (elem.get(i).clicked(mouseXPos, mouseYPos)) {
-          return Optional.of(elem.get(i));
+    for (int i = 0; i < paths.size(); i++) {
+      ArrayList<Commuter> commuters = paths.get(i).getCommuters();
+      for (int k = 0; k < commuters.size(); k++) {
+        if (commuters.get(k).clicked(mouseXPos, mouseYPos)) {
+          return Optional.of(commuters.get(k));
         }
       }
-    }
-    
-    Set<Path> paths = pathCommuterMap.keySet();
-    Iterator<Path> pathIterator = paths.iterator();
-    while (pathIterator.hasNext()) {
-      Path path = pathIterator.next();
-      if (path.clicked(mouseXPos, mouseYPos)) {
-        return Optional.of(path);
+      if (paths.get(i).clicked(mouseXPos, mouseYPos)) {
+        return Optional.of(paths.get(i));
       }
     }
     
     return Optional.empty();
   }
   
-  void removeEntity(SimulationEntity target) {
+  void removeEntity(SimEntity target) {
     if (target instanceof Path) {
       this.removePath((Path)target);
     }

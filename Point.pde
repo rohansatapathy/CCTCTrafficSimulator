@@ -1,31 +1,23 @@
-public class Point extends SimulationEntity {
-  //private float x;
-  //private float y;
+public class Point extends SimEntity {
+  private float x;
+  private float y;
   
-  private PVector coord;
-  
-  // constructor
   Point(float x, float y) {
     super("Unnamed", color(0, 0, 0));
-    this.coord = new PVector(x, y);
-    //this.x = x;
-    //this.y = y;
+    this.x = x;
+    this.y = y;
   }
   
   Point(float x, float y, String name, color c) {
     super(name, c);
-    this.coord = new PVector(x, y);
-    //this.x = x;
-    //this.y = y;
+    this.x = x;
+    this.y = y;
   }
   
-  
-  // draw function w defined color
   void draw(PApplet canvas) {
     this.draw(canvas, this.c);
   }
   
-  // overridden draw function w new color
   void draw(PApplet canvas, color newColor) {
     // replace original stroke color and fill color --> currently NOT working when original fill color is noFill() (noFill() value and WHITE value are the same)
     color strokeColorOriginal = g.strokeColor;
@@ -41,22 +33,21 @@ public class Point extends SimulationEntity {
   
   boolean onPoint(float xPos, float yPos, float threshold) {
     assert(threshold >= 0);
-    return PVector.sub(new PVector(xPos, yPos), this.coord).mag() <= threshold;
-    //return sqrt(pow(xPos - this.x, 2) + pow(yPos - this.y, 2)) <= threshold;
+    float distance = sqrt(pow(xPos - this.x, 2) + pow(yPos - this.y, 2));
+    return distance <= threshold;
   }
   
   boolean clicked(int mouseXPos, int mouseYPos) {
     return onPoint(mouseXPos, mouseYPos, 10);
   }
   
-  // setter and getters for private member variables
-  void setX(float newX) { coord.set(newX, this.getY()); }
+  void setX(float newX) { this.x = newX; }
   
-  void setY(float newY) { coord.set(this.getX(), newY); }
+  void setY(float newY) { this.y = newY; }
   
-  float getX() { return coord.x; }
+  float getX() { return this.x; }
   
-  float getY() { return coord.y; }
+  float getY() { return this.y; }
   
   String toString() { return "Point " + this.name + ": " + this.getX() + ", " + this.getY(); }
   

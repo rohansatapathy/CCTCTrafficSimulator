@@ -12,11 +12,12 @@ IFTextField numCommuter;
 IFRadioController commuterType;
 IFRadioButton ped, car, bus;
 IFButton addCommuters;
+IFLabel collisionCounter;
 
 
 PImage backgroundImage;
-int frameWidth = 1033;
-int frameHeight = 720;
+int frameWidth = 1300;
+int frameHeight = 730;
 
 boolean configurationWindowToggled = false;
 boolean addPointToggled = false;
@@ -25,11 +26,11 @@ boolean addPathToggled = false;
 int configurationPanelXPos = frameWidth - 160;
 int configurationPanelYPos = 0;
 int configurationPanelWidth = 160;
-int configurationPanelHeight = 370;
+int configurationPanelHeight = 420;
 
 
 ArrayList<Point> buffer = new ArrayList<Point>();
-Optional<SimulationEntity> selection;
+Optional<SimEntity> selection;
 
 Sim mySim;
 
@@ -37,7 +38,7 @@ Sim mySim;
 
 void setup() {
   
-  size(1033, 720);
+  size(1300, 730);
   backgroundImage = loadImage("CCTC.png");
   backgroundImage.resize(frameWidth, frameHeight);
   
@@ -58,6 +59,8 @@ void setup() {
   car = new IFRadioButton("Car", frameWidth - 150, 320, commuterType);
   addCommuters = new IFButton("Add Commuters", frameWidth - 150, 340);
   
+  collisionCounter = new IFLabel("Collision Counter: 0", frameWidth - 150, 370);
+  
   
   
   c.add(label);
@@ -72,6 +75,7 @@ void setup() {
   c.add(bus);
   c.add(car);
   c.add(addCommuters);
+  c.add(collisionCounter);
   
   
   addPoint.addActionListener(this);
@@ -108,10 +112,7 @@ void draw() {
   
   mySim.update();
   mySim.draw();
-  
-  
-  //// collision detection in abstract class
-  //// give travel direction 
+  collisionCounter.setLabel("Collision count: " + mySim.getCollisionCount());
   
 }
 
@@ -126,9 +127,9 @@ void actionPerformed(GUIEvent e) {
       Point[] nodes = new Point[buffer.size()];
       buffer.toArray(nodes);
       mySim.addPath(nodes);
-      buffer.clear();
     }
     addPathToggled = !addPathToggled;
+    buffer.clear();
   }
   // delete button is clicked
   else if (e.getSource() == delete) {
@@ -171,17 +172,17 @@ void actionPerformed(GUIEvent e) {
         int num = Integer.parseInt(contents);
         if (commuterType.getSelected() == ped) {
           for (int i = 0; i < num; i++) {
-            mySim.addCommuter(new Pedestrian((Path)selection.get(), random(0.1, 0.4)));
+            mySim.addCommuter(new Pedestrian(random(0.1, 0.4)), (Path)selection.get());
           }
         }
         else if (commuterType.getSelected() == car) {
           for (int i = 0; i < num; i++) {
-            mySim.addCommuter(new Car((Path)selection.get(), random(0.1, 0.4)));
+            mySim.addCommuter(new Car(12, 9, random(0.1, 0.4), "Pearl's Car", color(255, 0, 0)), (Path)selection.get());
           }
         }
         else if (commuterType.getSelected() == bus) {
           for (int i = 0; i < num; i++) {
-            mySim.addCommuter(new Bus((Path)selection.get(), random(0.1, 0.4)));
+            mySim.addCommuter(new Bus(20, 15, random(0.1, 0.4)), (Path)selection.get());
           }
         }
         else {
@@ -210,6 +211,7 @@ void mousePressed() {
   if (!configurationPanelClicked()) {
     selection = mySim.getClick(mouseX, mouseY);
     if (addPointToggled) {
+      System.out.println(mouseX + ", " + mouseY);
       mySim.addPoint(mouseX, mouseY);
     }
     else if (addPathToggled) {

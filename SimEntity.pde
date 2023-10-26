@@ -1,8 +1,8 @@
-public abstract class SimulationEntity {
+public abstract class SimEntity {
   protected String name;
   protected color c;
   
-  SimulationEntity(String name, color c) { 
+  SimEntity(String name, color c) { 
     this.name = name; 
     this.c = c;
   }

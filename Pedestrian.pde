@@ -1,5 +1,7 @@
 public class Pedestrian extends Commuter {
-  Pedestrian(Path pathOfTravel, float velocity) {
-    super(pathOfTravel, 5, velocity);
+  Pedestrian(float velocity) {
+    super(5, velocity);
   }
+  
+  String toString() { return "Pedestrian: " + this.name; }
 }
