@@ -18,6 +18,18 @@ public class Point extends SimEntity {
     this.draw(canvas, this.c);
   }
   
+  void draw(PApplet canvas, float radius, color newColor) {
+    color strokeColorOriginal = g.strokeColor;
+    color fillColorOriginal = g.fillColor;
+    
+    canvas.stroke(newColor);
+    canvas.fill(newColor);
+    canvas.circle(this.getX(), this.getY(), radius);
+    
+    canvas.stroke(strokeColorOriginal);
+    canvas.fill(fillColorOriginal);
+  }
+  
   void draw(PApplet canvas, color newColor) {
     // replace original stroke color and fill color --> currently NOT working when original fill color is noFill() (noFill() value and WHITE value are the same)
     color strokeColorOriginal = g.strokeColor;
@@ -34,7 +46,13 @@ public class Point extends SimEntity {
   boolean onPoint(float xPos, float yPos, float threshold) {
     assert(threshold >= 0);
     float distance = sqrt(pow(xPos - this.x, 2) + pow(yPos - this.y, 2));
-    return distance <= threshold;
+    return distance < threshold;
+  }
+  
+  boolean onPoint(Point other, float threshold) {
+    assert(threshold >= 0);
+    float distance = sqrt(pow(other.x - this.x, 2) + pow(other.y - this.y, 2));
+    return distance < threshold;
   }
   
   boolean clicked(int mouseXPos, int mouseYPos) {

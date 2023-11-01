@@ -3,13 +3,13 @@ public class Bus extends Commuter {
   private int busWidth;
   
   Bus(int busLength, int busWidth, float velocity) {
-    super(busLength, velocity);
+    super(busLength / 2, velocity, new SeekConfig(15, 15, 15, 15, 15, 15));
     this.busLength = busLength;
     this.busWidth = busWidth;
   }
   
   Bus(int busLength, int busWidth, float velocity, String name, color c) {
-    super(busLength, velocity, name, c);
+    super(busLength / 2, velocity, new SeekConfig(15, 15, 15, 15, 15, 15), name, c);
     this.busLength = busLength;
     this.busWidth = busWidth;
   }
@@ -34,4 +34,6 @@ public class Bus extends Commuter {
   }
   
   String toString() { return "Bus: " + this.name; }
+  
+ 
 }
