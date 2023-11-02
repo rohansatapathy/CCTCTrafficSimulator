@@ -9,7 +9,7 @@ public class Car extends Commuter {
   }
   
   Car(int carLength, int carWidth, float velocity, String name, color c) {
-    super(carLength / 2, velocity, new SeekConfig(10, carLength, 9, carWidth, 10, carLength), name, c);
+    super(carLength / 2, velocity, new SeekConfig(10, carLength, 9, carWidth, 15, 20), name, c);
     this.carLength = carLength;
     this.carWidth = carWidth;
   }
@@ -17,8 +17,6 @@ public class Car extends Commuter {
   void draw(PApplet canvas) {
     color strokeColorOriginal = g.strokeColor;
     color fillColorOriginal = g.fillColor;
-    //canvas.fill(color(0, 0, 255));
-    //canvas.circle(this.currentPoint.getX(), this.currentPoint.getY(), this.getRadius() * 2);
     
     canvas.stroke(this.c);
     canvas.fill(this.c);
@@ -31,7 +29,8 @@ public class Car extends Commuter {
     popMatrix();
     
     rectMode(CORNER);
-    
+    //canvas.fill(color(255, 0, 0));
+    //canvas.circle(this.seekForwardPoint.getX(), this.seekForwardPoint.getY(), 15);
     canvas.stroke(strokeColorOriginal);
     canvas.fill(fillColorOriginal);
   }

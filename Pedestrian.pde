@@ -1,6 +1,6 @@
 public class Pedestrian extends Commuter {
   Pedestrian(float velocity) {
-    super(5, velocity, new SeekConfig(7, 7, 7, 7, 15, 15));
+    super(5, velocity, new SeekConfig(5, 5, 15, 15, 15, 15));
   }
   
   Pedestrian(float velocity, String name, color c) {

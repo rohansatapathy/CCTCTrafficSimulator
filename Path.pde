@@ -77,14 +77,16 @@ public class Path extends SimEntity {
           continue;
         }
       }
-      
-      commuters.get(i).updateVelocity(commuters);
       i++;
+    } 
+  }
+  
+  void updateVelocities() {
+    for (int i = 0; i < commuters.size(); i++) {
+      commuters.get(i).updateVelocity(commuters);
     }
-      
   }
    
-  // get commuters currently on path
   ArrayList<Commuter> getCommuters() {
     return this.commuters;
   }
@@ -131,7 +133,6 @@ public class Path extends SimEntity {
     }
   }
   
-  // returns all points of intersection between this and other
   ArrayList<Point> intersect(Path other) {
     ArrayList<Point> result = new ArrayList<Point>();
     for (int i = 1; i < this.nodes.size(); i++) {
@@ -159,7 +160,6 @@ public class Path extends SimEntity {
   
   void stopCommuters(Point stoppingPos, int radiusOfEffect) {
     for (int i = 0; i < commuters.size(); i++) {
-      //System.out.println("in here");
       if (commuters.get(i).getCurrentPoint().onPoint(stoppingPos, radiusOfEffect)) {
         commuters.get(i).stop();
       }
@@ -179,10 +179,9 @@ public class Path extends SimEntity {
   }
   
   
-   int getPathLength() { return this.pathLength; }
+  int getPathLength() { return this.pathLength; }
    
-   int getNumCollisions() { return this.numCollisions; }
-  //void enactTrafficSignal
+  int getNumCollisions() { return this.numCollisions; }
   
   String toString() { return "Path: " + this.name; }
   

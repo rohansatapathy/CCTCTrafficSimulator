@@ -3,9 +3,7 @@ public class Intersection extends SimEntity {
   private Path pathA;
   private Path pathB;
   TrafficSignal signal;
-  int numCollisions;
   
-  // REQUIRES: pathA and pathB are 2 distinct paths
   Intersection(Point centerPoint, Path pathA, Path pathB) {
     super("Unnamed", color(220, 208, 255));
     assert(pathA != pathB);
@@ -38,7 +36,6 @@ public class Intersection extends SimEntity {
   
   void enactSignal() {
     if (signal.getState() == 1) {
-      //System.out.println("here");
       pathB.stopCommuters(centerPoint, signal.getRadiusOfEffect());
       pathA.releaseCommuters();
     }
@@ -53,42 +50,7 @@ public class Intersection extends SimEntity {
     
   }
   
-  void updateCollisions() {
-    ArrayList<Commuter> allCommuters = new ArrayList<Commuter>();
-    allCommuters.addAll(pathA.getCommuters());
-    allCommuters.addAll(pathB.getCommuters());
-    //ArrayList<Commuter> commutersB = pathB.getCommuters();
-    
-    for (int i = 0; i < allCommuters.size(); i++) {
-      numCollisions += allCommuters.get(i).detectCollisions(allCommuters);
-    }
-    
-    
-  }
-  
-  void updateCommuters() {
-    ArrayList<Commuter> commutersA = pathA.getCommuters();
-    ArrayList<Commuter> commutersB = pathB.getCommuters();
-    
-    for (int i = 0; i < commutersA.size(); i++) {
-      commutersA.get(i).updateVelocity(commutersB);
-    }
-    for (int i = 0; i < commutersB.size(); i++) {
-      commutersB.get(i).updateVelocity(commutersA);
-    }
-  }
-  
-  void updatePaths() {
-    pathA.updateSpawn();
-    pathB.updateSpawn();
-    pathA.updateCommuters();
-    pathB.updateCommuters();
-    //pathA.
-  }
-  
   boolean clicked(int mouseXPos, int mouseYPos) {
     return centerPoint.onPoint(mouseXPos, mouseYPos, 20);
   }
-  
-  int getNumCollisions() { return this.numCollisions; }
 }

@@ -100,13 +100,33 @@ void setup() {
   
   selection = Optional.empty();
   label.setLabel("Nothing selected");
+       
+                              
+  Point[] NUniversityAveInPoints = {new Point(26.0, 220.0), new Point(117.0, 213.0), new Point(209.0, 212.0), new Point(297.0, 218.0),
+                                    new Point(364.0, 236.0), new Point(425.0, 265.0), new Point(490.0, 303.0), new Point(542.0, 350.0),
+                                    new Point(589.0, 401.0), new Point(638.0, 450.0), new Point(693.0, 509.0), new Point(743.0, 563.0),
+                                    new Point(804.0, 632.0), new Point(860.0, 690.0)};
+                                    
+  Point[] HillToCentralPoints = { new Point(1041.0, 159.0), new Point(939.0, 170.0), new Point(842.0, 172.0), new Point(754.0, 178.0), new Point(668.0, 196.0),
+                                  new Point(588.0, 223.0), new Point(532.0, 280.0), new Point(487.0, 326.0), new Point(420.0, 403.0), new Point(401.0, 480.0), new Point(400.0, 542.0)};
+    
+  Point[] NUniversityAveOutPoints = {new Point(908.0, 657.0), new Point(845.0, 591.0), new Point(781.0, 527.0), new Point(717.0, 461.0),
+                                     new Point(662.0, 398.0), new Point(607.0, 342.0), new Point(548.0, 278.0), new Point(494.0, 230.0),
+                                     new Point(430.0, 188.0), new Point(346.0, 164.0), new Point(254.0, 158.0), new Point(152.0, 152.0), new Point(44.0, 152.0)};
+
+  Point[] CentralToHillPoints = {new Point(347.0, 401.0), new Point(385.0, 396.0), new Point(429.0, 362.0), new Point(462.0, 317.0),
+                                 new Point(505.0, 270.0), new Point(550.0, 227.0), new Point(581.0, 184.0), new Point(602.0, 125.0), new Point(629.0, 67.0)};
+                           
+  Path NUniversityAveIn = new Path(NUniversityAveInPoints, color(0, 0, 0), "NUniveristyAveIn");
+  Path NUniversityAveOut = new Path(NUniversityAveOutPoints, color(0, 0, 0), "NUniversityAveOut");
+  Path HillToCentral = new Path(HillToCentralPoints, color(0, 0, 0), "HillToCentral");
+  Path CentralToHill = new Path(CentralToHillPoints, color(0, 0, 0), "CentralToHill");
   
-  // testing stuff 
-  //Point[] array = {new Point(715, 121), new Point(685, 91), new Point(655, 61)};
-  //Path myPath = new Path(array);
-  //mySim.addPath(myPath);
-  //mySim.addCommuter(new Commuter(myPath, 10, 0.2));
-  //mySim.addCommuter(new Commuter(myPath, 20, 0.1));
+  mySim.addPath(NUniversityAveIn);
+  mySim.addPath(NUniversityAveOut);
+  mySim.addPath(HillToCentral);
+  mySim.addPath(CentralToHill);
+  
   
 }
 
@@ -160,7 +180,6 @@ void actionPerformed(GUIEvent e) {
   // delete button is clicked
   else if (e.getSource() == delete) {
     if (selection.isPresent()) {
-      System.out.println("Deleting " + selection.get().toString());
       mySim.removeEntity(selection.get());
       selection = Optional.empty();
       label.setLabel("Nothing selected");
@@ -205,7 +224,7 @@ void actionPerformed(GUIEvent e) {
         }
         else if (commuterType.getSelected() == car) {
           for (int i = 0; i < num; i++) {
-            if (!mySim.addCommuter(new Car(12, 9, random(0.5, 0.6), "Rando Car", color(251, 236, 93)), (Path)selection.get())) {
+            if (!mySim.addCommuter(new Car(12, 9, random(0.3, 0.4), "Rando Car", color(251, 236, 93)), (Path)selection.get())) {
               label.setLabel("spawn blockage: insertion failed");
             }
           }
@@ -238,12 +257,11 @@ boolean configurationPanelClicked() {
 }
 
 
-
+// TODO: add clicking to change traffic signal
 void mousePressed() {
   if (!configurationPanelClicked()) {
     selection = mySim.getClick(mouseX, mouseY);
     if (addPointToggled) {
-      System.out.println(mouseX + ", " + mouseY);
       mySim.addPoint(mouseX, mouseY);
     }
     else if (addPathToggled) {

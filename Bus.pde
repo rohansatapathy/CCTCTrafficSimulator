@@ -29,6 +29,8 @@ public class Bus extends Commuter {
     popMatrix();
     
     rectMode(CORNER);
+    //canvas.fill(color(255, 0, 0));
+    //canvas.circle(this.seekForwardPoint.getX(), this.seekForwardPoint.getY(), 15);
     canvas.stroke(strokeColorOriginal);
     canvas.fill(fillColorOriginal);
   }

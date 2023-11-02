@@ -10,6 +10,7 @@ public class Sim {
   
   // for data!
   private int totalCollisions;
+  private int totalIntersectionCollisions;
   
   Sim(PApplet canvas) {
     this.canvas = canvas;
@@ -17,6 +18,7 @@ public class Sim {
     this.points = new ArrayList<Point>();
     this.intersections = new ArrayList<Intersection>();
     totalCollisions = 0;
+    totalIntersectionCollisions = 0;
   }
   
   void addPoint(int xCoord, int yCoord) {
@@ -37,7 +39,6 @@ public class Sim {
   }
   
   void addPath(Point[] nodes, color c, String name) {
-    System.out.println("Num: " + paths.size());
     paths.add(new Path(nodes, c, name));
   }
   
@@ -50,12 +51,9 @@ public class Sim {
   }
   
   boolean addIntersection(Point click, Path pathA, Path pathB) {
-    //System.out.println("here");
     ArrayList<Point> intersectionPoints = pathA.intersect(pathB);
     for (int i = 0; i < intersectionPoints.size(); i++) {
-      //System.out.println("in for loop"); 
       if (click.onPoint(intersectionPoints.get(i), 15)) {
-        //System.out.println("new intersection");
         intersections.add(new Intersection(intersectionPoints.get(i), pathA, pathB)); //<>//
         paths.remove(pathA);
         paths.remove(pathB);
@@ -80,11 +78,9 @@ public class Sim {
     }
     for (int i = 0; i < intersections.size(); i++) {
       if (path == intersections.get(i).getPathA()) {
-        System.out.println("here1");
         return intersections.get(i).getPathA().addCommuter(commuter);
       }
       if (path == intersections.get(i).getPathB()) {
-        System.out.println("here2");
         return intersections.get(i).getPathB().addCommuter(commuter);
         
       }
@@ -109,27 +105,40 @@ public class Sim {
     for (int i = 0; i < paths.size(); i++) {
       paths.get(i).updateSpawn();
       paths.get(i).updateCommuters();
+      paths.get(i).updateVelocities();
       paths.get(i).updateCollisions();
       
       sumCollisions += paths.get(i).getNumCollisions();
     }
     
+    ArrayList<Commuter> intersectionCommuters = new ArrayList<Commuter>();
+    ArrayList<Path> intersectionPaths = new ArrayList<Path>();
+    
     for (int i = 0; i < intersections.size(); i++) {
-      //intersections.get(i).updateCommuters(); // TODO: implement this function correctly
-      intersections.get(i).updatePaths();
-      intersections.get(i).updateCollisions();
-      sumCollisions += intersections.get(i).getNumCollisions();
+      if (!intersectionPaths.contains(intersections.get(i).getPathA())) {
+        intersectionPaths.add(intersections.get(i).getPathA());
+        intersectionCommuters.addAll(intersections.get(i).getPathA().getCommuters());
+      }
+      if (!intersectionPaths.contains(intersections.get(i).getPathB())) {
+        intersectionPaths.add(intersections.get(i).getPathB());
+        intersectionCommuters.addAll(intersections.get(i).getPathB().getCommuters());
+      }
     }
     
-    this.totalCollisions = sumCollisions;
+    for (int i = 0; i < intersectionPaths.size(); i++) {
+      intersectionPaths.get(i).updateSpawn();
+      intersectionPaths.get(i).updateCommuters();
+    }
     
+    for (int i = 0; i < intersectionCommuters.size(); i++) {
+      totalIntersectionCollisions += intersectionCommuters.get(i).detectCollisions(intersectionCommuters);
+      intersectionCommuters.get(i).updateVelocity(intersectionCommuters);
+    }
     
-   //for (int i = 0; i < intersections.size(); i++) {
-   //  intersections.get(i).enactSignal();
-   //}
-    //updateCollisions();
-    //enactObstacleAvoidance();
+    this.totalCollisions = sumCollisions + totalIntersectionCollisions;
   }
+  
+  // TODO: get total person delay statistics
   
   int getCollisionCount() { // TODO: consider an overall get data function ????
     return this.totalCollisions;
@@ -152,7 +161,6 @@ public class Sim {
     for (int i = 0; i < points.size(); i++) { // draw points
       points.get(i).draw(this.canvas);
     }
-    
     
     for (int i = 0; i < paths.size(); i++) { // draw commuters
       ArrayList<Commuter> commuters = paths.get(i).getCommuters();
@@ -181,8 +189,23 @@ public class Sim {
         return Optional.of(points.get(i));
       }
     }
-    // TODO: add clicking for path A and B's commuters
+    
     for (int i = 0; i < intersections.size(); i++) {
+      
+      ArrayList<Commuter> commutersA = intersections.get(i).getPathA().getCommuters();
+      ArrayList<Commuter> commutersB = intersections.get(i).getPathB().getCommuters();
+      
+      for (int k = 0; k < commutersA.size(); k++) {
+        if (commutersA.get(k).clicked(mouseXPos, mouseYPos)) {
+          return Optional.of(commutersA.get(k));
+        }
+      }
+      
+      for (int k = 0; k < commutersB.size(); k++) {
+        if (commutersB.get(k).clicked(mouseXPos, mouseYPos)) {
+          return Optional.of(commutersB.get(k));
+        }
+      }
      
       if (intersections.get(i).clicked(mouseXPos, mouseYPos)) {
         return Optional.of(intersections.get(i));

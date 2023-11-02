@@ -1,6 +1,5 @@
 public class Commuter extends SimEntity {
   private int radius;
-  private boolean deaccelerated;
   private boolean collided;
   
   private float currentV;
@@ -10,7 +9,7 @@ public class Commuter extends SimEntity {
   
   protected Point currentPoint;
   private Point targetPoint;
-  private Point seekForwardPoint;
+  protected Point seekForwardPoint;
   
   private int targetIndex;
   private SeekConfig seekConfig;
@@ -32,7 +31,6 @@ public class Commuter extends SimEntity {
     this.seekConfig = seekConfig;
     this.stopped = false;
     this.hasReachedEnd = false;
-    this.deaccelerated = false;
     this.collided = true; // initial collision during spawn does not count
   }
   
@@ -49,7 +47,6 @@ public class Commuter extends SimEntity {
     this.seekConfig = seekConfig;
     this.stopped = false;
     this.hasReachedEnd = false;
-    this.deaccelerated = false;
     this.collided = true; // initial collision during spawn does not count
   }
   
@@ -65,6 +62,7 @@ public class Commuter extends SimEntity {
   }
   
   void updatePosition(ArrayList<Point> pathNodes) {
+    //System.out.println(this.currentV);
     if (targetPoint.onPoint(currentPoint, 5)) {
       targetIndex++;
       if (targetIndex >= pathNodes.size()) {
@@ -78,7 +76,6 @@ public class Commuter extends SimEntity {
     this.currentDir = atan2(-(targetPoint.getY() - currentPoint.getY()), targetPoint.getX() - currentPoint.getX());
     this.currentPoint.setX(this.currentPoint.getX() + currentV * cos(currentDir));
     this.currentPoint.setY(this.currentPoint.getY() + currentV * sin((-1) * currentDir));
-    //this.deaccelerated = false;
   }
   
   void updateVelocity(ArrayList<Commuter> others) {
@@ -86,7 +83,6 @@ public class Commuter extends SimEntity {
       this.deaccelerate();
     }
     else {
-      //System.out.println("cruise");
       this.cruise();
     }
   }
@@ -137,13 +133,15 @@ public class Commuter extends SimEntity {
     canvas.stroke(this.c);
     canvas.fill(this.c);
     canvas.circle(this.currentPoint.getX(), this.currentPoint.getY(), this.radius);
-    
+    //canvas.fill(color(255, 0, 0));
+    //canvas.circle(this.seekForwardPoint.getX(), this.seekForwardPoint.getY(), 15);
     canvas.stroke(strokeColorOriginal);
     canvas.fill(fillColorOriginal);
   }
   
   void accelerate() {
-    this.currentV += accelerationConstant; 
+    System.out.println("accel");
+    this.currentV += 0.01; 
   }
   
   void deaccelerate() {
@@ -170,7 +168,7 @@ public class Commuter extends SimEntity {
   
   boolean clicked(int mouseXPos, int mouseYPos) { return (currentPoint.onPoint(mouseXPos, mouseYPos, radius)); }
   
-  boolean detectCollision(Commuter other) { return currentPoint.onPoint(other.currentPoint, this.radius + other.getRadius()); }
+  boolean detectCollision(Commuter other) { return currentPoint.onPoint(other.currentPoint, this.radius); }
   
   boolean hasReachedEnd() { return this.hasReachedEnd; }
   

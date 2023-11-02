@@ -1,3 +1,5 @@
+
+
 class TrafficSignal extends SimEntity {
   private Point position;
   private int state; // 4 states: [0: nothing, autonomous behavior, 1: pathA goes, pathB stops, 2: pathB goes, pathA stops, 3: both paths stop, ]
@@ -20,6 +22,7 @@ class TrafficSignal extends SimEntity {
     rectMode(CENTER);
     canvas.rect(this.position.getX(), this.position.getY(), 30, 30, 5, 5, 5, 5);
     
+    //TODO: Implement 4 traffic light states
     if (this.state == 0) {
       lightColor = color(234, 60, 83);
     }
@@ -30,8 +33,6 @@ class TrafficSignal extends SimEntity {
     canvas.stroke(lightColor);
     canvas.fill(lightColor);
     canvas.circle(this.position.getX(), this.position.getY(), 15);
-    //canvas.fill(color(255, 0, 0));
-    //canvas.circle(this.position.getX(), this.position.getY(), 5);
     rectMode(CORNER);
     
     canvas.stroke(strokeColorOriginal);
