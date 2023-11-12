@@ -6,11 +6,13 @@ public class Sim {
   private ArrayList<Path> paths;
   private ArrayList<Point> points;
   private ArrayList<Intersection> intersections;
-  private final float PIXELS_PER_FEET = (70 / 50);
+  //private final float PIXELS_PER_FEET = (70 / 50);
+  //private final int FRAME_RATE;
   
   // for data!
   private int totalCollisions;
-  private int totalIntersectionCollisions;
+  private int totalPersonDelay;
+  
   
   Sim(PApplet canvas) {
     this.canvas = canvas;
@@ -18,7 +20,6 @@ public class Sim {
     this.points = new ArrayList<Point>();
     this.intersections = new ArrayList<Intersection>();
     totalCollisions = 0;
-    totalIntersectionCollisions = 0;
   }
   
   void addPoint(int xCoord, int yCoord) {
@@ -45,18 +46,32 @@ public class Sim {
   void addPath(Path path) {
     paths.add(path);
   }
-  
+ 
   void removePath(Path target) {
     paths.remove(target);
+    int i = 0;
+    while (i < intersections.size()) {
+      if (intersections.get(i).getPathA() == target) {
+        intersections.remove(intersections.get(i));
+      }
+      else if (intersections.get(i).getPathB() == target) {
+        intersections.remove(intersections.get(i));
+      }
+      else {
+        i++;
+      }
+    }
+  }
+  
+  void addIntersection(Intersection intersection) {
+    intersections.add(intersection);
   }
   
   boolean addIntersection(Point click, Path pathA, Path pathB) {
     ArrayList<Point> intersectionPoints = pathA.intersect(pathB);
     for (int i = 0; i < intersectionPoints.size(); i++) {
       if (click.onPoint(intersectionPoints.get(i), 15)) {
-        intersections.add(new Intersection(intersectionPoints.get(i), pathA, pathB)); //<>//
-        paths.remove(pathA);
-        paths.remove(pathB);
+        intersections.add(new Intersection(intersectionPoints.get(i), pathA, pathB));
         return true;
       }
     }
@@ -64,28 +79,38 @@ public class Sim {
   }
   
   void removeIntersection(Intersection target) {
-    paths.add(target.getPathA());
-    paths.add(target.getPathB());
     intersections.remove(target);
+    
+  }
+  
+  boolean addTrafficSignal(Intersection intersection, Path path) {
+    for (int i = 0; i < intersections.size(); i++) {
+      if (intersections.get(i) == intersection) {
+        return intersections.get(i).addTrafficSignal(path, 2);
+      }
+    }
+    return false;
   }
   
   
-  boolean addCommuter(Commuter commuter, Path path) {
+  void addCommuter(Commuter commuter, Path path) {
     for (int i = 0; i < paths.size(); i++) {
       if (paths.get(i) == path) {
-        return paths.get(i).addCommuter(commuter);
+        paths.get(i).addCommuter(commuter);
+        return;
       }
     }
     for (int i = 0; i < intersections.size(); i++) {
       if (path == intersections.get(i).getPathA()) {
-        return intersections.get(i).getPathA().addCommuter(commuter);
+        intersections.get(i).getPathA().addCommuter(commuter);
+        return;
       }
       if (path == intersections.get(i).getPathB()) {
-        return intersections.get(i).getPathB().addCommuter(commuter);
+        intersections.get(i).getPathB().addCommuter(commuter);
+        return;
         
       }
     }
-    return false;
   }
   
   void removeCommuter(Commuter commuter) {
@@ -94,51 +119,49 @@ public class Sim {
         return;
       }
     }
+    
+    for (int i = 0; i < intersections.size(); i++) {
+      if (intersections.get(i).getPathA().getCommuters().remove(commuter) || intersections.get(i).getPathB().getCommuters().remove(commuter)) {
+        return;
+      }
+    }
   }
   
   void update() {
     int sumCollisions = 0;
+    //int sumDelay = 0;
+    
     for (int i = 0; i < intersections.size(); i++) {
       intersections.get(i).enactSignal();
+      intersections.get(i).seekCommuters();
+      intersections.get(i).updateCollisions();
+      sumCollisions += intersections.get(i).getNumCollisions();
     }
     
     for (int i = 0; i < paths.size(); i++) {
       paths.get(i).updateSpawn();
-      paths.get(i).updateCommuters();
+      paths.get(i).seekCommuters();
       paths.get(i).updateVelocities();
       paths.get(i).updateCollisions();
-      
       sumCollisions += paths.get(i).getNumCollisions();
     }
     
-    ArrayList<Commuter> intersectionCommuters = new ArrayList<Commuter>();
-    ArrayList<Path> intersectionPaths = new ArrayList<Path>();
-    
-    for (int i = 0; i < intersections.size(); i++) {
-      if (!intersectionPaths.contains(intersections.get(i).getPathA())) {
-        intersectionPaths.add(intersections.get(i).getPathA());
-        intersectionCommuters.addAll(intersections.get(i).getPathA().getCommuters());
-      }
-      if (!intersectionPaths.contains(intersections.get(i).getPathB())) {
-        intersectionPaths.add(intersections.get(i).getPathB());
-        intersectionCommuters.addAll(intersections.get(i).getPathB().getCommuters());
-      }
+    for (int i = 0; i < paths.size(); i++) {
+      paths.get(i).updateCommuters();
     }
     
-    for (int i = 0; i < intersectionPaths.size(); i++) {
-      intersectionPaths.get(i).updateSpawn();
-      intersectionPaths.get(i).updateCommuters();
-    }
+    //for (int i = 0; i < allCommuters.size(); i++) {
+    //  sumDelay += allCommuters.get(i).getTotalDelay();
+    //}
     
-    for (int i = 0; i < intersectionCommuters.size(); i++) {
-      totalIntersectionCollisions += intersectionCommuters.get(i).detectCollisions(intersectionCommuters);
-      intersectionCommuters.get(i).updateVelocity(intersectionCommuters);
-    }
-    
-    this.totalCollisions = sumCollisions + totalIntersectionCollisions;
+    //this.totalPersonDelay = sumDelay;
+    this.totalCollisions = sumCollisions;
   }
   
-  // TODO: get total person delay statistics
+  int getTotalPersonDelay() {
+    return this.totalPersonDelay; 
+  }
+  
   
   int getCollisionCount() { // TODO: consider an overall get data function ????
     return this.totalCollisions;
@@ -147,11 +170,6 @@ public class Sim {
   void draw() {
     for (int i = 0; i < paths.size(); i++) { // draw paths
       paths.get(i).draw(this.canvas);
-    }
-    
-    for (int i = 0; i < intersections.size(); i++) {
-      intersections.get(i).getPathA().draw(this.canvas);
-      intersections.get(i).getPathB().draw(this.canvas);
     }
     
     for (int i = 0; i < intersections.size(); i++) { // draw intersections
@@ -169,17 +187,6 @@ public class Sim {
       }
     }
     
-    for (int i = 0; i < intersections.size(); i++) {
-      ArrayList<Commuter> commutersA = intersections.get(i).getPathA().getCommuters();
-      ArrayList<Commuter> commutersB = intersections.get(i).getPathB().getCommuters();
-      for (int k = 0; k < commutersA.size(); k++) {
-        commutersA.get(k).draw(this.canvas);
-      }
-      for (int k = 0; k < commutersB.size(); k++) {
-        commutersB.get(k).draw(this.canvas);
-      }
-    }
-    
     
   }
   
@@ -189,32 +196,15 @@ public class Sim {
         return Optional.of(points.get(i));
       }
     }
-    
     for (int i = 0; i < intersections.size(); i++) {
-      
-      ArrayList<Commuter> commutersA = intersections.get(i).getPathA().getCommuters();
-      ArrayList<Commuter> commutersB = intersections.get(i).getPathB().getCommuters();
-      
-      for (int k = 0; k < commutersA.size(); k++) {
-        if (commutersA.get(k).clicked(mouseXPos, mouseYPos)) {
-          return Optional.of(commutersA.get(k));
+      ArrayList<TrafficSignal> signals = intersections.get(i).getSignals();
+      for (int k = 0; k < signals.size(); k++) {
+        if (signals.get(k).clicked(mouseXPos, mouseYPos)) {
+          return Optional.of(signals.get(k));
         }
       }
-      
-      for (int k = 0; k < commutersB.size(); k++) {
-        if (commutersB.get(k).clicked(mouseXPos, mouseYPos)) {
-          return Optional.of(commutersB.get(k));
-        }
-      }
-     
       if (intersections.get(i).clicked(mouseXPos, mouseYPos)) {
         return Optional.of(intersections.get(i));
-      }
-      if (intersections.get(i).getPathA().clicked(mouseXPos, mouseYPos)) {
-        return Optional.of(intersections.get(i).getPathA());
-      }
-      if (intersections.get(i).getPathB().clicked(mouseXPos, mouseYPos)) {
-        return Optional.of(intersections.get(i).getPathB());
       }
     }
     

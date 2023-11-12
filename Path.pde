@@ -48,13 +48,8 @@ public class Path extends SimEntity {
     canvas.fill(fillColorOriginal);
   }
   
-  boolean addCommuter(Commuter commuter) {
-    commuter.resetPosition(this.nodes.get(0).getX(), this.nodes.get(0).getY());
-    if (canSpawn) {
-      this.commuters.add(commuter);
-      return true;
-    }
-    return false;
+  void addCommuter(Commuter commuter) {
+    spawnQueue.add(commuter);
   }
   
   boolean removeCommuter(Commuter commuter) {
@@ -77,18 +72,52 @@ public class Path extends SimEntity {
           continue;
         }
       }
+      commuters.get(i).reset();
       i++;
     } 
   }
   
   void updateVelocities() {
     for (int i = 0; i < commuters.size(); i++) {
-      commuters.get(i).updateVelocity(commuters);
+      commuters.get(i).updateVelocity();
+    }
+  }
+  
+  void seekCommuters() {
+    for (int i = 0; i < commuters.size(); i++) {
+      commuters.get(i).seekCommutersPath(commuters);
     }
   }
    
   ArrayList<Commuter> getCommuters() {
     return this.commuters;
+  }
+  
+  Optional<Point> getPreviousPathNode(float xPos, float yPos) {
+    for (int i = 0; i < nodes.size() - 1; i++) {
+      boolean xBetween = false;
+      boolean yBetween = false;
+      if (nodes.get(i).getX() <= xPos && nodes.get(i + 1).getX() >= xPos) {
+        xBetween = true;
+      }
+      
+      if (nodes.get(i + 1).getX() <= xPos && nodes.get(i).getX() >= xPos) {
+        xBetween = true;
+      }
+      
+      if (nodes.get(i).getY() <= yPos && nodes.get(i + 1).getY() >= yPos) {
+        yBetween = true;
+      }
+      
+      if (nodes.get(i + 1).getY() <= yPos && nodes.get(i).getY() >= yPos) {
+        yBetween = true;
+      }
+      
+      if (xBetween && yBetween) {
+        return Optional.of(nodes.get(i));
+      }
+    }
+    return Optional.empty();
   }
   
   boolean clicked(int xPos, int yPos) {
@@ -119,7 +148,6 @@ public class Path extends SimEntity {
       }
       i++;
     }
-    
     if (!spawnQueue.isEmpty() && canSpawn) {
       Commuter commuter = spawnQueue.remove();
       commuter.resetPosition(nodes.get(0).getX(), nodes.get(0).getY());
@@ -129,7 +157,7 @@ public class Path extends SimEntity {
   
   void updateCollisions() {
     for (int i = 0; i < commuters.size(); i++) {
-      numCollisions += commuters.get(i).detectCollisions(commuters);
+      numCollisions += commuters.get(i).detectCollisionsPath(commuters);
     }
   }
   
@@ -158,27 +186,17 @@ public class Path extends SimEntity {
     return result;
   }
   
-  void stopCommuters(Point stoppingPos, int radiusOfEffect) {
+  void enactSignal(TrafficSignal signal) {
     for (int i = 0; i < commuters.size(); i++) {
-      if (commuters.get(i).getCurrentPoint().onPoint(stoppingPos, radiusOfEffect)) {
-        commuters.get(i).stop();
+      if (commuters.get(i).seekTrafficSignal(signal)) {
+        if (signal.getState() == 1) {
+          //System.out.println("stopped");
+          commuters.get(i).stop();
+        }
       }
     }
   }
-  
-  void stopCommuters() {
-    for (int i = 0; i < commuters.size(); i++) {
-      commuters.get(i).stop();
-    }
-  }
-  
-  void releaseCommuters() {
-    for (int i = 0; i < commuters.size(); i++) {
-      commuters.get(i).go();
-    }
-  }
-  
-  
+ 
   int getPathLength() { return this.pathLength; }
    
   int getNumCollisions() { return this.numCollisions; }

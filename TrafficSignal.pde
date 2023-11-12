@@ -2,14 +2,16 @@
 
 class TrafficSignal extends SimEntity {
   private Point position;
-  private int state; // 4 states: [0: nothing, autonomous behavior, 1: pathA goes, pathB stops, 2: pathB goes, pathA stops, 3: both paths stop, ]
+  private int state; // 3 states: 0:  no signal, 1: stop, 2: go
   private int radiusOfEffect;
+  private float direction;
   
-  TrafficSignal(float xPosition, float yPosition, int initialState, int radiusOfEffect) {
+  TrafficSignal(float xPosition, float yPosition, float direction, int initialState, int radiusOfEffect) {
     super("Unnamed", color(55, 55, 55));
     this.position = new Point(xPosition, yPosition);
     this.radiusOfEffect = radiusOfEffect;
     this.state = initialState;
+    this.direction = direction;
   }
   
   void draw(PApplet canvas) {
@@ -17,33 +19,42 @@ class TrafficSignal extends SimEntity {
     color fillColorOriginal = g.fillColor;
     color lightColor;
     
-    canvas.stroke(this.c);
-    canvas.fill(this.c);
-    rectMode(CENTER);
-    canvas.rect(this.position.getX(), this.position.getY(), 30, 30, 5, 5, 5, 5);
-    
-    //TODO: Implement 4 traffic light states
     if (this.state == 0) {
-      lightColor = color(234, 60, 83);
+      lightColor = color(255, 255, 255);
+    }
+    else if (this.state == 1) {
+      lightColor = color(255, 87, 87);
     }
     else {
-      lightColor = color(255, 95, 87);
+      lightColor = color(80, 200, 120);
     }
     
     canvas.stroke(lightColor);
     canvas.fill(lightColor);
-    canvas.circle(this.position.getX(), this.position.getY(), 15);
-    rectMode(CORNER);
+    rectMode(CENTER);
     
+    pushMatrix();
+    translate(this.position.getX(), this.position.getY());
+    rotate(this.direction);
+    canvas.rect(0, 0, 25, 5);
+    popMatrix();
+    
+    rectMode(CORNER);
     canvas.stroke(strokeColorOriginal);
     canvas.fill(fillColorOriginal);
   }
   
   boolean clicked(int mouseXPos, int mouseYPos) {
-    return position.onPoint(mouseXPos, mouseYPos, 15);
+    if (position.onPoint(mouseXPos, mouseYPos, 15)) {
+      this.state = (this.state + 1) % 3;
+      return true;
+    }
+    return false;
   }
   
   int getRadiusOfEffect() { return this.radiusOfEffect; }
+  
+  Point getPosition() { return this.position; }
   
   int getState() { return this.state; }
   

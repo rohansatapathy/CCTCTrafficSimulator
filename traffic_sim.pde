@@ -3,7 +3,7 @@ import java.util.Optional;
 
 GUIController c;
 
-IFCheckBox addPath, addPoint, addIntersection;
+IFCheckBox addPath, addPoint, addIntersection, addTrafficSignal;
 IFButton delete;
 IFButton enterColor;
 IFLabel label;
@@ -39,8 +39,6 @@ final int FRAME_RATE = 60;
 
 Sim mySim;
 
-// speeds greater than 10 pixels per frame begin to exhibit significant undefined behavior
-
 void setup() {
   
   size(1300, 730);
@@ -55,10 +53,11 @@ void setup() {
   addPoint = new IFCheckBox("Add Point", configurationPanelXPos + 10, 50);
   addPath = new IFCheckBox("Add Path", configurationPanelXPos + 10, 90);
   addIntersection = new IFCheckBox("Add Intersection", configurationPanelXPos + 10, 130);
+  //addTrafficSignal = new IFCheckBox
   delete = new IFButton("Delete", configurationPanelXPos + 10, 170);
   colorOption = new IFTextField("Color", configurationPanelXPos + 10, 210, 130, "R G B");
   enterColor = new IFButton("Enter Color", configurationPanelXPos + 10, 250);
-  numCommuter = new IFTextField("# of Commuters", configurationPanelXPos + 10, 280, 130, "10");
+  numCommuter = new IFTextField("# of Commuters", configurationPanelXPos + 10, 280, 130, "1");
   
   commuterType = new IFRadioController("Type of Commuter");
   ped = new IFRadioButton("Pedestrian", configurationPanelXPos + 10, 310, commuterType);
@@ -69,7 +68,7 @@ void setup() {
   collisionCounter = new IFLabel("Collision Counter: 0", configurationPanelXPos + 10, 410);
   totalPersonDelay = new IFLabel("Total Person Delay: 0", configurationPanelXPos + 10, 430);
   time = new IFLabel("Time Elapsed: ", configurationPanelXPos + 10, 450);
-  
+  // TODO: display total person delay
   
   
   c.add(label);
@@ -122,10 +121,24 @@ void setup() {
   Path HillToCentral = new Path(HillToCentralPoints, color(0, 0, 0), "HillToCentral");
   Path CentralToHill = new Path(CentralToHillPoints, color(0, 0, 0), "CentralToHill");
   
+ 
+  Intersection HillToCentral_NUniversityAveOut = new Intersection(new Point(540.5078, 271.34027), NUniversityAveOut,  HillToCentral);
+  Intersection CentralToHill_NUniversityAveOut = new Intersection(new Point(521.38556, 254.3427), NUniversityAveOut, CentralToHill);
+  Intersection HillToCentral_NUniversityAveIn = new Intersection(new Point(500.34924, 312.35413), NUniversityAveIn, HillToCentral);
+  Intersection CentralToHill_NUniversityAveIn = new Intersection(new Point(480.10236, 297.21368), NUniversityAveIn, CentralToHill);
+  
   mySim.addPath(NUniversityAveIn);
   mySim.addPath(NUniversityAveOut);
   mySim.addPath(HillToCentral);
   mySim.addPath(CentralToHill);
+  
+  mySim.addIntersection(HillToCentral_NUniversityAveOut);
+  mySim.addIntersection(CentralToHill_NUniversityAveOut);
+  mySim.addIntersection(HillToCentral_NUniversityAveIn);
+  mySim.addIntersection(CentralToHill_NUniversityAveIn);
+  mySim.addTrafficSignal(HillToCentral_NUniversityAveOut, HillToCentral);
+  mySim.addTrafficSignal(HillToCentral_NUniversityAveOut, NUniversityAveOut);
+  mySim.addTrafficSignal(CentralToHill_NUniversityAveIn, CentralToHill);
   
   
 }
@@ -217,23 +230,17 @@ void actionPerformed(GUIEvent e) {
         int num = Integer.parseInt(contents);
         if (commuterType.getSelected() == ped) {
           for (int i = 0; i < num; i++) {
-            if (!mySim.addCommuter(new Pedestrian(random(0.1, 0.12), "Student", color(242, 133, 0)), (Path)selection.get())) {
-              label.setLabel("spawn blockage: insertion failed");
-            }
+            mySim.addCommuter(new Pedestrian(random(0.1, 0.12), "Student", color(242, 133, 0)), (Path)selection.get());
           }
         }
         else if (commuterType.getSelected() == car) {
           for (int i = 0; i < num; i++) {
-            if (!mySim.addCommuter(new Car(12, 9, random(0.3, 0.4), "Rando Car", color(251, 236, 93)), (Path)selection.get())) {
-              label.setLabel("spawn blockage: insertion failed");
-            }
+            mySim.addCommuter(new Car(12, 9, random(0.3, 0.4), "Rando Car", color(251, 236, 93)), (Path)selection.get());
           }
         }
         else if (commuterType.getSelected() == bus) {
           for (int i = 0; i < num; i++) {
-            if (!mySim.addCommuter(new Bus(20, 15, random(0.3, 0.4), "MBus", color(62, 142, 222)), (Path)selection.get())) {
-              label.setLabel("spawn blockage: insertion failed");
-            }
+            mySim.addCommuter(new Bus(20, 15, random(1, 1.1), "MBus", color(62, 142, 222)), (Path)selection.get());
           }
         }
         else {
@@ -257,7 +264,6 @@ boolean configurationPanelClicked() {
 }
 
 
-// TODO: add clicking to change traffic signal
 void mousePressed() {
   if (!configurationPanelClicked()) {
     selection = mySim.getClick(mouseX, mouseY);

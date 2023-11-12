@@ -29,11 +29,11 @@ public class Car extends Commuter {
     popMatrix();
     
     rectMode(CORNER);
-    //canvas.fill(color(255, 0, 0));
-    //canvas.circle(this.seekForwardPoint.getX(), this.seekForwardPoint.getY(), 15);
     canvas.stroke(strokeColorOriginal);
     canvas.fill(fillColorOriginal);
   }
   
   String toString() { return "Car: " + this.name; }
+  
+  int getTotalDelay() { return super.getTotalDelay() * 2; }
 }

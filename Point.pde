@@ -31,7 +31,6 @@ public class Point extends SimEntity {
   }
   
   void draw(PApplet canvas, color newColor) {
-    // replace original stroke color and fill color --> currently NOT working when original fill color is noFill() (noFill() value and WHITE value are the same)
     color strokeColorOriginal = g.strokeColor;
     color fillColorOriginal = g.fillColor;
     

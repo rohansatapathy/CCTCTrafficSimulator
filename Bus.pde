@@ -9,7 +9,7 @@ public class Bus extends Commuter {
   }
   
   Bus(int busLength, int busWidth, float velocity, String name, color c) {
-    super(busLength / 2, velocity, new SeekConfig(15, 15, 15, 15, 15, 15), name, c);
+    super(busLength / 2, velocity, new SeekConfig(15, 15, 15, 10, 15, 15), name, c);
     this.busLength = busLength;
     this.busWidth = busWidth;
   }
@@ -29,13 +29,13 @@ public class Bus extends Commuter {
     popMatrix();
     
     rectMode(CORNER);
-    //canvas.fill(color(255, 0, 0));
-    //canvas.circle(this.seekForwardPoint.getX(), this.seekForwardPoint.getY(), 15);
     canvas.stroke(strokeColorOriginal);
     canvas.fill(fillColorOriginal);
   }
   
   String toString() { return "Bus: " + this.name; }
+  
+  int getTotalDelay() { return super.getTotalDelay() * 50; }
   
  
 }
