@@ -1,22 +1,25 @@
-public class SeekConfig {
-  public final int SEEK_DISTANCE_PED;
-  public final int SEEK_DISTANCE_CAR;
-  public final int SEEK_DISTANCE_BUS;
+class SeekConfig {
+  public final float SEEK_DISTANCE_PED;
+  public final float SEEK_DISTANCE_CAR;
+  public final float SEEK_DISTANCE_BUS;
   
-  public final int SEEK_RADIUS_PED;
-  public final int SEEK_RADIUS_CAR;
-  public final int SEEK_RADIUS_BUS;
+  public final float SEEK_RADIUS_PED;
+  public final float SEEK_RADIUS_CAR;
+  public final float SEEK_RADIUS_BUS;
   
-  SeekConfig(int seekDistancePed, int seekRadiusPed, int seekDistanceCar, int seekRadiusCar, int seekDistanceBus, int seekRadiusBus) {
+  public final float SPAWN_BUFFER;
+  
+  SeekConfig(float seekDistancePed, float seekRadiusPed, float seekDistanceCar, float seekRadiusCar, float seekDistanceBus, float seekRadiusBus, float spawnBuffer) {
     this.SEEK_DISTANCE_PED = seekDistancePed;
     this.SEEK_DISTANCE_CAR = seekDistanceCar;
     this.SEEK_DISTANCE_BUS = seekDistanceBus;
     this.SEEK_RADIUS_PED = seekRadiusPed;
     this.SEEK_RADIUS_CAR = seekRadiusCar;
     this.SEEK_RADIUS_BUS = seekRadiusBus;
+    this.SPAWN_BUFFER = spawnBuffer;
   }
   
-  int getSeekDistance(Commuter commuter) {
+  float getSeekDistance(Commuter commuter) {
     if (commuter instanceof Car) {
       return this.SEEK_DISTANCE_CAR;
     }
@@ -28,7 +31,7 @@ public class SeekConfig {
     }
   }
   
-  int getSeekRadius(Commuter commuter) {
+  float getSeekRadius(Commuter commuter) {
     if (commuter instanceof Car) {
       return this.SEEK_RADIUS_CAR;
     }
@@ -38,5 +41,9 @@ public class SeekConfig {
     else {
       return this.SEEK_RADIUS_PED;
     }
+  }
+  
+  float getSpawnBuffer() {
+    return this.SPAWN_BUFFER;
   }
 }

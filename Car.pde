@@ -1,15 +1,15 @@
-public class Car extends Commuter {
-  private int carLength;
-  private int carWidth;
+class Car extends Commuter {
+  private float carLength;
+  private float carWidth;
   
-  Car(int carLength, int carWidth, float velocity) {
-    super(carLength / 2, velocity, new SeekConfig(10, carLength, 10, carLength, 10, carLength));
+  Car(float carLength, float carWidth, float velocity) {
+    super(carLength / 2, velocity, new SeekConfig(carLength, carLength, carLength, carLength / 2, carLength * 2, carLength, carLength / 4));
     this.carLength = carLength;
     this.carWidth = carWidth;
   }
   
-  Car(int carLength, int carWidth, float velocity, String name, color c) {
-    super(carLength / 2, velocity, new SeekConfig(10, carLength, 9, carWidth, 15, 20), name, c);
+  Car(float carLength, float carWidth, float velocity, String name, color c) {
+    super(carLength / 2, velocity, new SeekConfig(carLength, carLength, carLength, carLength / 2, carLength * 2, carLength, carLength / 4), name, c);
     this.carLength = carLength;
     this.carWidth = carWidth;
   }
@@ -24,7 +24,7 @@ public class Car extends Commuter {
     
     pushMatrix();
     translate(this.currentPoint.getX(), this.currentPoint.getY());
-    rotate((-1) * this.currentDir); // positive numbers rotate clockwise ...  need to multiply by -1
+    rotate((-1) * this.currentDir);
     canvas.rect(0, 0, carLength, carWidth);
     popMatrix();
     
@@ -35,5 +35,5 @@ public class Car extends Commuter {
   
   String toString() { return "Car: " + this.name; }
   
-  int getTotalDelay() { return super.getTotalDelay() * 2; }
+  float getTotalDelay() { return super.getTotalDelay() * 2; }
 }

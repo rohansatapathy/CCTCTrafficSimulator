@@ -1,15 +1,15 @@
-public class Bus extends Commuter {
-  private int busLength;
-  private int busWidth;
+class Bus extends Commuter {
+  private float busLength;
+  private float busWidth;
   
-  Bus(int busLength, int busWidth, float velocity) {
-    super(busLength / 2, velocity, new SeekConfig(15, 15, 15, 15, 15, 15));
+  Bus(float busLength, float busWidth, float velocity) {
+    super(busLength / 3, velocity, new SeekConfig(busLength / 2, busLength / 2, busLength, busLength / 2, busLength / 2, busLength, busLength / 2));
     this.busLength = busLength;
     this.busWidth = busWidth;
   }
   
-  Bus(int busLength, int busWidth, float velocity, String name, color c) {
-    super(busLength / 2, velocity, new SeekConfig(15, 15, 15, 10, 15, 15), name, c);
+  Bus(float busLength, float busWidth, float velocity, String name, color c) {
+    super(busLength / 3, velocity, new SeekConfig(busLength / 2, busLength / 2, busLength, busLength / 2, busLength / 2, busLength, busLength / 2), name, c);
     this.busLength = busLength;
     this.busWidth = busWidth;
   }
@@ -18,24 +18,27 @@ public class Bus extends Commuter {
     color strokeColorOriginal = g.strokeColor;
     color fillColorOriginal = g.fillColor;
     
+    
     canvas.stroke(this.c);
     canvas.fill(this.c);
     rectMode(CENTER);
     
     pushMatrix();
     translate(this.currentPoint.getX(), this.currentPoint.getY());
-    rotate((-1) * this.currentDir); // positive numbers rotate clockwise ...  need to multiply by -1
+    rotate((-1) * this.currentDir);
     canvas.rect(0, 0, busLength, busWidth);
     popMatrix();
     
     rectMode(CORNER);
+    
+    
     canvas.stroke(strokeColorOriginal);
     canvas.fill(fillColorOriginal);
   }
   
   String toString() { return "Bus: " + this.name; }
   
-  int getTotalDelay() { return super.getTotalDelay() * 50; }
+  float getTotalDelay() { return super.getTotalDelay() * 25; }
   
  
 }

@@ -1,5 +1,5 @@
-public class Commuter extends SimEntity {
-  private int radius;
+class Commuter extends SimEntity {
+  protected float radius;
   
   private float currentV;
   private float originalV;
@@ -14,9 +14,7 @@ public class Commuter extends SimEntity {
   private SeekConfig seekConfig;
   private boolean stopped;
   private boolean hasReachedEnd;
-  private int totalDelay;
-  
-  public static final int MAX_COMMUTER_RADIUS = 20;
+  private float totalDelay;
   
   private boolean pathCommuterSighted;
   private boolean intersectionCommuterSighted;
@@ -28,7 +26,7 @@ public class Commuter extends SimEntity {
   private boolean pathNeverCollided;
   private boolean intersectionNeverCollided;
   
-  Commuter(int radius, float velocity, SeekConfig seekConfig) {
+  Commuter(float radius, float velocity, SeekConfig seekConfig) {
     super("Unnamed", color(0, 255, 0));
     this.radius = radius;
     this.currentV = this.originalV = velocity;
@@ -50,7 +48,7 @@ public class Commuter extends SimEntity {
     this.pathCollided = this.intersectionCollided = false;
   }
   
-  Commuter(int radius, float velocity, SeekConfig seekConfig, String name, color c) {
+  Commuter(float radius, float velocity, SeekConfig seekConfig, String name, color c) {
     super(name, c);
     this.radius = radius;
     this.currentV = this.originalV = velocity;
@@ -121,7 +119,6 @@ public class Commuter extends SimEntity {
     if (this.stopped || intersectionCommuterSighted) {
       minimalV = minVelocityIntersection;
       deaccelerate();
-      System.out.println("currentV: " + this.currentV);
     }
     else if (pathCommuterSighted) {
       minimalV = minVelocityPath;
@@ -131,16 +128,23 @@ public class Commuter extends SimEntity {
       cruise();
     }
     
-    if (currentV < originalV) {
+    if (currentV / originalV < 0.5) {
       totalDelay++;
     }
   }
   
-  int seekCommuters(ArrayList<Commuter> others) {
+  int seekCommuters(ArrayList<Commuter> others, Path path) {
     for (int i = 0; i < others.size(); i++) {
       if (this != others.get(i)) {
-        seekForwardPoint.setX(currentPoint.getX() + seekConfig.getSeekDistance(others.get(i)) * cos(currentDir));
-        seekForwardPoint.setY(currentPoint.getY() + seekConfig.getSeekDistance(others.get(i)) * sin((-1) * currentDir));
+        Optional<Pose> pose = path.getPoseDistanceFrom(currentPoint.getX(), currentPoint.getY(), seekConfig.getSeekDistance(others.get(i)));
+        if (pose.isPresent()) {
+          seekForwardPoint.setX(pose.get().getPosition().getX());
+          seekForwardPoint.setY(pose.get().getPosition().getY());
+        }
+        else {
+          seekForwardPoint.setX(currentPoint.getX() + seekConfig.getSeekDistance(others.get(i)) * cos(currentDir));
+          seekForwardPoint.setY(currentPoint.getY() + seekConfig.getSeekDistance(others.get(i)) * sin((-1) * currentDir));
+        }
         if (seekForwardPoint.onPoint(others.get(i).currentPoint, seekConfig.getSeekRadius(others.get(i)))) {
           return i;
         }
@@ -149,16 +153,17 @@ public class Commuter extends SimEntity {
     return -1;
   }
   
-  void seekCommutersPath(ArrayList<Commuter> others) {
-    int commuterIndex = this.seekCommuters(others);
+  void seekCommutersPath(ArrayList<Commuter> others, Path path) {
+    int commuterIndex = this.seekCommuters(others, path);
+    
     if (commuterIndex >= 0) {
       pathCommuterSighted = true;
       minVelocityPath = others.get(commuterIndex).currentV;
     }
   }
   
-  void seekCommutersIntersection(ArrayList<Commuter> others) {
-    int commuterIndex = this.seekCommuters(others);
+  void seekCommutersIntersection(ArrayList<Commuter> others, Path path) {
+    int commuterIndex = this.seekCommuters(others, path);
     if (commuterIndex >= 0 && !others.get(commuterIndex).intersectionCommuterSighted) {
       intersectionCommuterSighted = true;
       minVelocityIntersection = 0; //<>//
@@ -166,9 +171,9 @@ public class Commuter extends SimEntity {
   }
   
   boolean seekTrafficSignal(TrafficSignal signal) {
-    seekForwardPoint.setX(currentPoint.getX() + 10 * cos(currentDir));
-    seekForwardPoint.setY(currentPoint.getY() + 10 * sin((-1) * currentDir));
-    return seekForwardPoint.onPoint(signal.getPosition(), 10);
+    seekForwardPoint.setX(currentPoint.getX() + (radius + 10) * cos(currentDir));
+    seekForwardPoint.setY(currentPoint.getY() + (radius + 10) * sin((-1) * currentDir));
+    return seekForwardPoint.onPoint(signal.getPosition(), 5);
   }
   
   int detectCollisionsPath(ArrayList<Commuter> others) {
@@ -234,6 +239,7 @@ public class Commuter extends SimEntity {
       accelerate();
     }
     else if (this.currentV > this.originalV) {
+      
       deaccelerate();
     }
     else {
@@ -256,7 +262,9 @@ public class Commuter extends SimEntity {
   
   float getCurrentV() { return this.currentV; }
   
-  int getRadius() { return this.radius; }
+  float getRadius() { return this.radius; }
   
-  int getTotalDelay() { return this.totalDelay; }
+  float getTotalDelay() { return this.totalDelay; }
+  
+  float getSpawnBuffer() { return this.seekConfig.getSpawnBuffer(); }
 }

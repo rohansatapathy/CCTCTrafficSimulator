@@ -1,4 +1,4 @@
-public class Point extends SimEntity {
+class Point extends SimEntity {
   private float x;
   private float y;
   
@@ -6,12 +6,19 @@ public class Point extends SimEntity {
     super("Unnamed", color(0, 0, 0));
     this.x = x;
     this.y = y;
+    
   }
   
   Point(float x, float y, String name, color c) {
     super(name, c);
     this.x = x;
     this.y = y;
+  }
+  
+  Point(Point other) {
+    super(other.name, other.c);
+    this.x = other.x;
+    this.y = other.y;
   }
   
   void draw(PApplet canvas) {

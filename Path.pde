@@ -1,9 +1,10 @@
 import java.util.Arrays;
 import java.util.Optional;
 
-public class Path extends SimEntity {
+class Path extends SimEntity {
   private ArrayList<Point> nodes;
   private ArrayList<Commuter> commuters;
+  private ArrayList<TrafficSensor> sensors;
   private int pathLength;
   private Queue<Commuter> spawnQueue;
   private boolean canSpawn;
@@ -17,6 +18,7 @@ public class Path extends SimEntity {
     this.spawnQueue = new ArrayDeque<Commuter>();
     this.pathLength = this.nodes.size();
     this.commuters = new ArrayList<Commuter>();
+    this.sensors = new ArrayList<TrafficSensor>();
     this.canSpawn = true;
   }
   
@@ -28,10 +30,10 @@ public class Path extends SimEntity {
     this.spawnQueue = new ArrayDeque<Commuter>();
     this.pathLength = this.nodes.size();
     this.commuters = new ArrayList<Commuter>();
+    this.sensors = new ArrayList<TrafficSensor>();
     this.canSpawn = true;
   }
   
-  // draws path
   void draw(PApplet canvas) {
     color strokeColorOriginal = g.strokeColor;
     color fillColorOriginal = g.fillColor;
@@ -56,6 +58,13 @@ public class Path extends SimEntity {
     return this.commuters.remove(commuter);
   }
   
+  void addSensor(TrafficSensor sensor) {
+    this.sensors.add(sensor);
+  }
+  
+  void removeSensor(TrafficSensor sensor) {
+    this.sensors.remove(sensor);
+  }
   
   void updateCommuters() {
     int i = 0;
@@ -85,15 +94,22 @@ public class Path extends SimEntity {
   
   void seekCommuters() {
     for (int i = 0; i < commuters.size(); i++) {
-      commuters.get(i).seekCommutersPath(commuters);
+      commuters.get(i).seekCommutersPath(commuters, this);
+    }
+  }
+  
+  void updateSensors() {
+    for (int i = 0; i < sensors.size(); i++) {
+      sensors.get(i).enactSensor(commuters);
     }
   }
    
-  ArrayList<Commuter> getCommuters() {
-    return this.commuters;
-  }
+  ArrayList<Commuter> getCommuters() { return this.commuters; }
   
-  Optional<Point> getPreviousPathNode(float xPos, float yPos) {
+  ArrayList<TrafficSensor> getSensors() { return this.sensors; }
+  
+  Optional<Pose> getPoseDistanceFrom(float xPos, float yPos, float distance) {
+    int index = -1;
     for (int i = 0; i < nodes.size() - 1; i++) {
       boolean xBetween = false;
       boolean yBetween = false;
@@ -114,8 +130,45 @@ public class Path extends SimEntity {
       }
       
       if (xBetween && yBetween) {
-        return Optional.of(nodes.get(i));
+        if (distance < 0) {
+          index = i;
+        }
+        else {
+          index = i + 1;
+        }
+        break;
       }
+    }
+    
+    if (index >= 0) {
+      Point current = new Point(xPos, yPos);
+      float distanceFromCurrent = sqrt(pow(nodes.get(index).getX() - current.getX(), 2) + pow(nodes.get(index).getY() - current.getY(), 2));
+      float distanceToBeTravelled = distance;
+      
+      while (abs(distanceToBeTravelled) > distanceFromCurrent) {
+        current.setX(nodes.get(index).getX());
+        current.setY(nodes.get(index).getY());
+        if (distance < 0) {
+          index--;
+        }
+        else {
+          index++;
+        }
+        if (index < 0 || index > nodes.size() - 1) {
+          return Optional.empty();
+        }
+        if (distance < 0) {
+          distanceToBeTravelled += distanceFromCurrent;
+        }
+        else {
+          distanceToBeTravelled -= distanceFromCurrent;
+        }
+        distanceFromCurrent = sqrt(pow(nodes.get(index).getX() - current.getX(), 2) + pow(nodes.get(index).getY() - current.getY(), 2));
+      }
+      float direction = atan2(-(nodes.get(index).getY() - current.getY()), nodes.get(index).getX() - current.getX());
+      current.setX(current.getX() + abs(distanceToBeTravelled) * cos(direction));
+      current.setY(current.getY() + abs(distanceToBeTravelled) * sin((-1) * direction));
+      return Optional.of(new Pose(current.getX(), current.getY(), direction));
     }
     return Optional.empty();
   }
@@ -143,7 +196,7 @@ public class Path extends SimEntity {
     int i = 0;
     while (canSpawn && i < commuters.size()) {
       Commuter commuter = commuters.get(i);
-      if (nodes.get(0).onPoint(commuter.getCurrentPoint().getX(), commuter.getCurrentPoint().getY(), commuter.getRadius() + Commuter.MAX_COMMUTER_RADIUS)) {
+      if (nodes.get(0).onPoint(commuter.getCurrentPoint().getX(), commuter.getCurrentPoint().getY(), commuter.getRadius() + commuter.getSpawnBuffer() + 25)) {
         this.canSpawn = false;
       }
       i++;
@@ -159,6 +212,19 @@ public class Path extends SimEntity {
     for (int i = 0; i < commuters.size(); i++) {
       numCollisions += commuters.get(i).detectCollisionsPath(commuters);
     }
+  }
+  
+  float getTotalDelay() {
+    float totalDelay = 0;
+    for (int i = 0; i < commuters.size(); i++) {
+      totalDelay += commuters.get(i).getTotalDelay();
+    }
+    Iterator<Commuter> iter = spawnQueue.iterator();
+    while (iter.hasNext()) {
+      totalDelay += iter.next().getTotalDelay();
+    }
+    
+    return totalDelay;
   }
   
   ArrayList<Point> intersect(Path other) {
@@ -190,7 +256,6 @@ public class Path extends SimEntity {
     for (int i = 0; i < commuters.size(); i++) {
       if (commuters.get(i).seekTrafficSignal(signal)) {
         if (signal.getState() == 1) {
-          //System.out.println("stopped");
           commuters.get(i).stop();
         }
       }

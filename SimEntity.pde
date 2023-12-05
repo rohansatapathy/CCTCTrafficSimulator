@@ -1,4 +1,4 @@
-public abstract class SimEntity {
+abstract class SimEntity {
   protected String name;
   protected color c;
   
@@ -7,7 +7,6 @@ public abstract class SimEntity {
     this.c = c;
   }
   
-  // abstract functions 
   abstract boolean clicked(int mouseXPos, int mouseYPos);
   abstract void draw(PApplet canvas);
   abstract String toString();

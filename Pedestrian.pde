@@ -1,10 +1,10 @@
-public class Pedestrian extends Commuter {
-  Pedestrian(float velocity) {
-    super(5, velocity, new SeekConfig(5, 5, 15, 15, 15, 15));
+class Pedestrian extends Commuter {
+  Pedestrian(float velocity, int radius) {
+    super(radius, velocity, new SeekConfig(radius / 2, radius, radius * 4, radius * 3, radius * 4, radius * 3, 0));
   }
   
-  Pedestrian(float velocity, String name, color c) {
-    super(7, velocity, new SeekConfig(7, 7, 7, 7, 15, 15), name, c);
+  Pedestrian(int radius, float velocity, String name, color c) {
+    super(radius, velocity, new SeekConfig(radius / 2, radius, radius * 4, radius * 3, radius * 4, radius * 3, 0), name, c);
   }
   
   String toString() { return "Pedestrian: " + this.name; }

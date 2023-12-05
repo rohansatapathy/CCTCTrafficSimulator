@@ -1,6 +1,6 @@
 import java.util.Optional;
 
-public class Intersection extends SimEntity {
+class Intersection extends SimEntity {
   private Point centerPoint;
   private Path pathA;
   private Path pathB;
@@ -16,7 +16,6 @@ public class Intersection extends SimEntity {
     this.pathB = pathB;
     pathALight = Optional.empty();
     pathBLight = Optional.empty();
-    System.out.println(centerPoint);
   }
   
   void draw(PApplet canvas) {
@@ -38,28 +37,29 @@ public class Intersection extends SimEntity {
     canvas.fill(fillColorOriginal);
   }
   
-  boolean addTrafficSignal(Path path, int initialState) {
+  Optional<TrafficSignal> addTrafficSignal(Path path, int initialState, float onTime) {
     if (path == pathA) {
-      Optional<Point> node = pathA.getPreviousPathNode(centerPoint.getX(), centerPoint.getY());
-      if (node.isPresent()) {
-        float direction = atan2(-(node.get().getY() - centerPoint.getY()), node.get().getX() - centerPoint.getX());
-        float positionX = centerPoint.getX() + 20 * cos(direction);
-        float positionY = centerPoint.getY() + 20 * sin((-1) * direction);
-        pathALight = Optional.of(new TrafficSignal(positionX, positionY, direction, initialState, 15));
-        return true;
+      Optional<Pose> pose = pathA.getPoseDistanceFrom(centerPoint.getX(), centerPoint.getY(), -20);
+      if (pose.isPresent()) {
+        TrafficSignal signal = new TrafficSignal(pose.get().getPosition().getX(), pose.get().getPosition().getY(), pose.get().getHeading(), initialState, 15, onTime);
+        pathALight = Optional.of(signal);
+        return pathALight;
       }
     }
     else if (path == pathB) {
-      Optional<Point> node = pathB.getPreviousPathNode(centerPoint.getX(), centerPoint.getY());
-      if (node.isPresent()) {
-        float direction = atan2(-(node.get().getY() - centerPoint.getY()), node.get().getX() - centerPoint.getX());
-        float positionX = centerPoint.getX() + 20 * cos(direction);
-        float positionY = centerPoint.getY() + 20 * sin((-1) * direction);
-        pathBLight = Optional.of(new TrafficSignal(positionX, positionY, direction, initialState, 15));
-        return true;
+      Optional<Pose> pose = pathB.getPoseDistanceFrom(centerPoint.getX(), centerPoint.getY(), -20);
+      if (pose.isPresent()) {
+        TrafficSignal signal = new TrafficSignal(pose.get().getPosition().getX(), pose.get().getPosition().getY(), pose.get().getHeading(), initialState, 15, onTime);
+        pathBLight = Optional.of(signal);
+        return pathBLight;
       }
     }
-    return false;
+    return Optional.empty();
+  }
+  
+  boolean equals(Intersection other) {
+    return ((this.pathA == other.pathA && this.pathB == other.pathB && this.centerPoint.getX() == other.centerPoint.getX() && this.centerPoint.getY() == other.centerPoint.getY()) || 
+            (this.pathA == other.pathB && this.pathB == other.pathA && this.centerPoint.getX() == other.centerPoint.getX() && this.centerPoint.getY() == other.centerPoint.getY()));
   }
   
   float getXCenterPos() { return this.centerPoint.getX(); }
@@ -74,13 +74,13 @@ public class Intersection extends SimEntity {
     ArrayList<Commuter> pathACommuters = pathA.getCommuters();
     ArrayList<Commuter> pathBCommuters = pathB.getCommuters();
     for (int i = 0; i < pathACommuters.size(); i++) {
-      if (inIntersection(pathACommuters.get(i))) { // TODO: consider letting seekCommutersIntersection handle this if?
-        pathACommuters.get(i).seekCommutersIntersection(pathBCommuters);
+      if (inIntersection(pathACommuters.get(i))) {
+        pathACommuters.get(i).seekCommutersIntersection(pathBCommuters, pathA);
       }
     }
     for (int i = 0; i < pathBCommuters.size(); i++) {
       if (inIntersection(pathBCommuters.get(i))) {
-        pathBCommuters.get(i).seekCommutersIntersection(pathACommuters);
+        pathBCommuters.get(i).seekCommutersIntersection(pathACommuters, pathB);
       }
     }
   }
@@ -100,11 +100,13 @@ public class Intersection extends SimEntity {
     }
   }
   
-  void enactSignal() {
+  void enactSignal(int FRAME_RATE) {
     if (pathALight.isPresent()) {
+      pathALight.get().update(FRAME_RATE);
       pathA.enactSignal(pathALight.get());
     }
     if (pathBLight.isPresent()) {
+      pathBLight.get().update(FRAME_RATE);
       pathB.enactSignal(pathBLight.get());
     }
   }
@@ -113,20 +115,17 @@ public class Intersection extends SimEntity {
     return centerPoint.onPoint(mouseXPos, mouseYPos, 20);
   }
   
-  // TODO: remove this??
   boolean inIntersection(Commuter commuter) {
-    return centerPoint.onPoint(commuter.getCurrentPoint(), 15);
+    return centerPoint.onPoint(commuter.getCurrentPoint(), 100);
   }
   
-  ArrayList<TrafficSignal> getSignals() {
-    ArrayList<TrafficSignal> signals = new ArrayList<TrafficSignal>();
-    if (pathALight.isPresent()) {
-      signals.add(pathALight.get());
+  void removeSignal(TrafficSignal signal) {
+    if (pathALight.isPresent() && pathALight.get() == signal) {
+      pathALight = Optional.empty();
     }
-    if (pathBLight.isPresent()) {
-      signals.add(pathBLight.get());
+    if (pathBLight.isPresent() && pathBLight.get() == signal) {
+      pathBLight = Optional.empty();
     }
-    return signals;
   }
   
   int getNumCollisions() { return this.numCollisions; }

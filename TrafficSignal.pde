@@ -1,17 +1,19 @@
 
-
 class TrafficSignal extends SimEntity {
   private Point position;
-  private int state; // 3 states: 0:  no signal, 1: stop, 2: go
+  private int state; // 2 states: 0:  no signal, 1: stop
   private int radiusOfEffect;
   private float direction;
+  private float onTime;
+  private float currentTimer;
   
-  TrafficSignal(float xPosition, float yPosition, float direction, int initialState, int radiusOfEffect) {
+  TrafficSignal(float xPosition, float yPosition, float direction, int initialState, int radiusOfEffect, float onTime) {
     super("Unnamed", color(55, 55, 55));
     this.position = new Point(xPosition, yPosition);
     this.radiusOfEffect = radiusOfEffect;
     this.state = initialState;
     this.direction = direction;
+    this.onTime = this.currentTimer = onTime;
   }
   
   void draw(PApplet canvas) {
@@ -31,11 +33,12 @@ class TrafficSignal extends SimEntity {
     
     canvas.stroke(lightColor);
     canvas.fill(lightColor);
+    
     rectMode(CENTER);
     
     pushMatrix();
     translate(this.position.getX(), this.position.getY());
-    rotate(this.direction);
+    rotate(this.direction * (-1) + (PI / 2));
     canvas.rect(0, 0, 25, 5);
     popMatrix();
     
@@ -44,9 +47,24 @@ class TrafficSignal extends SimEntity {
     canvas.fill(fillColorOriginal);
   }
   
+  void update(int simFrameRate) {
+    if (state == 1) {
+      currentTimer -= (1.0 / simFrameRate);
+    }
+    else {
+      currentTimer = onTime;
+    }
+    
+    if (currentTimer <= 0) {
+      state = 0;
+    }
+  }
+  
+  float getCurrentTimer() { return this.currentTimer; }
+  
   boolean clicked(int mouseXPos, int mouseYPos) {
     if (position.onPoint(mouseXPos, mouseYPos, 15)) {
-      this.state = (this.state + 1) % 3;
+      this.state = (this.state + 1) % 2;
       return true;
     }
     return false;
@@ -57,6 +75,11 @@ class TrafficSignal extends SimEntity {
   Point getPosition() { return this.position; }
   
   int getState() { return this.state; }
+  
+  void setState(int newState) { 
+    this.state = newState;
+    currentTimer = onTime;
+  }
   
   String toString() { return "TrafficSignal: " + this.name; }
   
