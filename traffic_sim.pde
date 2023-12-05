@@ -196,37 +196,60 @@ void draw() {
 void actionPerformed(GUIEvent e) {
   // addPoint is toggled
   if (e.getSource() == addPoint) {
+    if (!addPointToggled) {
+      label.setLabel("Click to add points");
+    }
+    else {
+      label.setLabel("Nothing selected");
+    }
     addPointToggled = !addPointToggled;
   }
   // addPath is toggled
   else if (e.getSource() == addPath) {
-    if (addPathToggled && pointBuffer.size() >= 2) {
-      Point[] nodes = new Point[pointBuffer.size()];
-      pointBuffer.toArray(nodes);
-      mySim.addPath(nodes);
+    if (!addPathToggled) {
+      label.setLabel("Click to add path points");
+    }
+    else {
+      if (pointBuffer.size() >= 2) {
+        Point[] nodes = new Point[pointBuffer.size()];
+        pointBuffer.toArray(nodes);
+        mySim.addPath(nodes);
+        label.setLabel("Path added");
+      }
+      else {
+        label.setLabel("Failed to add path");
+      }
     }
     addPathToggled = !addPathToggled;
     pointBuffer.clear();
   }
   // addIntersection is toggled
   else if (e.getSource() == addIntersection) {
-    if (addIntersectionToggled && pathBuffer.size() == 2) {
-       if (!mySim.addIntersection(pathBuffer.get(0), pathBuffer.get(1)).isPresent()) {
-         label.setLabel("Failed to find intersection.");
-       }
-    }
-    else {
+    if (!addIntersectionToggled) {
       label.setLabel("Select 2 intersection paths");
     }
+    else {
+      if (pathBuffer.size() == 2 && mySim.addIntersection(pathBuffer.get(0), pathBuffer.get(1)).isPresent()) {
+        label.setLabel("Intersection added");
+      }
+      else {
+        label.setLabel("Failed to find intersection.");
+      }
+    }
     addIntersectionToggled = !addIntersectionToggled;
-    //selectIntersectionPoint = false;
     pathBuffer.clear();
   }
   // addTrafficSignal is toggled
   else if (e.getSource() == addTrafficSignal) {
-    if (addTrafficSignalToggled && pathBuffer.size() == 1 && intersectionBuffer.size() == 1) {
-      if (!mySim.addTrafficSignal(intersectionBuffer.get(0), pathBuffer.get(0)).isPresent()) {
-        label.setLabel("Failed to find signal location");
+    if (!addTrafficSignalToggled) {
+      label.setLabel("Select an intersection and path");
+    }
+    else {
+      if (pathBuffer.size() == 1 && intersectionBuffer.size() == 1 && mySim.addTrafficSignal(intersectionBuffer.get(0), pathBuffer.get(0)).isPresent()) {
+        label.setLabel("Signal added");
+      }
+      else {
+        label.setLabel("Failed to find signal");
       }
     }
     addTrafficSignalToggled = !addTrafficSignalToggled;
@@ -235,19 +258,22 @@ void actionPerformed(GUIEvent e) {
   }
   // addTrafficSensor is toggled
   else if (e.getSource() == addTrafficSensor) {
-    if (addTrafficSensorToggled) {
-      if (pathBuffer.size() == 1 && pointBuffer.size() == 1 && signalBuffer.size() > 0) {
-        mySim.addTrafficSensor(pathBuffer.get(0), pointBuffer.get(0).getX(), pointBuffer.get(0).getY(), new ArrayList<TrafficSignal>(signalBuffer));
-      }
-      else {
-        label.setLabel("Failed to create sensor");
-      }
+    if (!addTrafficSensorToggled) {
+      label.setLabel("Select path point and traffic signal(s)");
+      selectSensorPoint = true;
     }
     else {
-      label.setLabel("Select path point and traffic signal(s)");
+      if (pathBuffer.size() == 1 && pointBuffer.size() == 1 && signalBuffer.size() > 0) {
+        mySim.addTrafficSensor(pathBuffer.get(0), pointBuffer.get(0).getX(), pointBuffer.get(0).getY(), new ArrayList<TrafficSignal>(signalBuffer));
+        label.setLabel("Sensor added");
+      }
+      else {
+        label.setLabel("Failed to find sensor");
+      }
+      selectSensorPoint = false;
     }
+    
     addTrafficSensorToggled = !addTrafficSensorToggled;
-    selectSensorPoint = true;
     signalBuffer.clear();
     pointBuffer.clear();
     pathBuffer.clear();
@@ -257,7 +283,7 @@ void actionPerformed(GUIEvent e) {
     if (selection.isPresent()) {
       mySim.removeEntity(selection.get());
       selection = Optional.empty();
-      label.setLabel("Nothing selected");
+      label.setLabel("Deletion successful");
     }
   }
   // enter color button is clicked
@@ -333,7 +359,6 @@ void mousePressed() {
       if (selection.isPresent() && selection.get() instanceof Path) {
         pathBuffer.add((Path)selection.get());
       }
-      label.setLabel("Select 2 intersection paths");
       
     }
     else if (addTrafficSignalToggled) {
@@ -343,18 +368,15 @@ void mousePressed() {
       if (selection.isPresent() && selection.get() instanceof Path) {
         pathBuffer.add((Path)selection.get());
       }
-      
-      label.setLabel("Select an intersection and path");
     }
     else if (addTrafficSensorToggled) {
-      if (selectSensorPoint && selection.get() instanceof Path) {
+      if (selectSensorPoint && selection.isPresent() && selection.get() instanceof Path) {
         pointBuffer.add(new Point(mouseX, mouseY));
         pathBuffer.add((Path)selection.get());
       }
       else if (selection.isPresent() && selection.get() instanceof TrafficSignal) {
         signalBuffer.add((TrafficSignal)selection.get());
       }
-      label.setLabel("Select path point and traffic signal(s)");
     }
     else if (selection.isPresent()) {
       label.setLabel(selection.get().toString());
